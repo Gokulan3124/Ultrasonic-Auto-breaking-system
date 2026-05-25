@@ -1,0 +1,137 @@
+// Ultrasonic Pins
+const int trigPin = 9;
+const int echoPin = 10;
+
+// Motor A (Left)
+const int IN1 = 6;
+const int IN2 = 7;
+const int ENA = 5;
+
+// Motor B (Right)
+const int IN3 = 11;
+const int IN4 = 12;
+const int ENB = 3;
+
+// LEDs
+const int greenLED = 2;
+const int yellowLED = 4;
+const int redLED = 13;
+
+// Buzzer
+const int buzzer = 8;
+
+long duration;
+int distance;
+
+void setup() {
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+  pinMode(ENA, OUTPUT);
+
+  pinMode(IN3, OUTPUT);
+  pinMode(IN4, OUTPUT);
+  pinMode(ENB, OUTPUT);
+
+  pinMode(greenLED, OUTPUT);
+  pinMode(yellowLED, OUTPUT);
+  pinMode(redLED, OUTPUT);
+
+  pinMode(buzzer, OUTPUT);
+
+  Serial.begin(9600);
+}
+
+void loop() {
+
+  // ---- Ultrasonic Reading ----
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  duration = pulseIn(echoPin, HIGH);
+  distance = duration * 0.034 / 2;
+
+  Serial.print("Distance: ");
+  Serial.println(distance);
+
+  // -------- LOGIC --------
+
+  if (distance > 50) {
+    // 🚗 FULL SPEED
+    moveForward(255);
+
+    digitalWrite(greenLED, HIGH);
+    digitalWrite(yellowLED, LOW);
+    digitalWrite(redLED, LOW);
+
+    noTone(buzzer);
+  }
+
+  else if (distance > 25) {
+    // ⚠ MEDIUM SPEED
+    moveForward(180);
+
+    digitalWrite(greenLED, LOW);
+    digitalWrite(yellowLED, HIGH);
+    digitalWrite(redLED, LOW);
+
+    tone(buzzer, 1000);
+    delay(200);
+    noTone(buzzer);
+    delay(200);
+  }
+
+  else if (distance > 10) {
+    // 🛑 SLOW SPEED
+    moveForward(100);
+
+    digitalWrite(greenLED, LOW);
+    digitalWrite(yellowLED, LOW);
+    digitalWrite(redLED, HIGH);
+
+    noTone(buzzer);
+  }
+
+  else {
+    // 🚫 STOP (AUTO BRAKE)
+    stopMotors();
+
+    digitalWrite(greenLED, LOW);
+    digitalWrite(yellowLED, LOW);
+    digitalWrite(redLED, HIGH);
+
+    tone(buzzer, 2000);
+  }
+
+  delay(100);
+}
+
+// -------- FUNCTIONS --------
+
+void moveForward(int speedVal) {
+  // Motor A
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+  analogWrite(ENA, speedVal);
+
+  // Motor B
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
+  analogWrite(ENB, speedVal);
+}
+
+void stopMotors() {
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, LOW);
+  analogWrite(ENA, 0);
+
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, LOW);
+  analogWrite(ENB, 0);
+}
